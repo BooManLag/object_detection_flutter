@@ -25,6 +25,13 @@ class ScanController extends GetxController {
   var isCameraInitialized = false.obs;
   var cameraCount = 0.obs;
 
+  var x = 0.0.obs;
+  var y = 0.0.obs;
+  var w = 0.0.obs;
+  var h = 0.0.obs;
+  var label = "".obs;
+  var isObjectDetected = false.obs;
+
   initCamera() async {
     if (await Permission.camera.request().isGranted) {
       cameras = await availableCameras();
@@ -70,8 +77,21 @@ class ScanController extends GetxController {
         threshold: 0.1,
         asynch: true);
 
-    if (detector != null) {
+    if (detector != null && detector.isNotEmpty) {
       print("Result is $detector");
+      var detectedObject = detector.first;
+      label.value = detectedObject["label"];
+      isObjectDetected.value = true;
+
+      // Dummy coordinates and size
+      x.value = 50.0; // Example position
+      y.value = 50.0; // Example position
+      w.value = 200.0; // Example width
+      h.value = 200.0; // Example height
+    } else {
+      isObjectDetected.value = false;
     }
+    update();
   }
 }
+
