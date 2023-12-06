@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:object_detection/views/camera_view.dart';
-import 'package:tflite_v2/tflite_v2.dart';
+import 'package:object_detection/views/image_picker_view.dart';
 
 void main() {
   runApp(MyApp());
@@ -14,108 +14,50 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: CameraView(),
+      debugShowCheckedModeBanner: false,
+      home: MainScreen(),
     );
   }
 }
 
-class ImagePickerDemo extends StatefulWidget {
+class MainScreen extends StatefulWidget {
   @override
-  _ImagePickerDemoState createState() => _ImagePickerDemoState();
+  _MainScreenState createState() => _MainScreenState();
 }
 
-class _ImagePickerDemoState extends State<ImagePickerDemo> {
-  final ImagePicker _picker = ImagePicker();
-  String recognitionResultsText = "";
-  XFile? _image;
-  File? file;
-  var _recognitions;
-  var v = "";
+class _MainScreenState extends State<MainScreen> {
+  int _currentIndex = 0;
+  final List<Widget> _children = [
+    CameraView(),
+    ImagePickerDemo(),
+  ];
 
-  // var dataList = [];
-  @override
-  void initState() {
-    super.initState();
-    loadmodel().then((value) {
-      setState(() {});
-    });
-  }
-
-  loadmodel() async {
-    await Tflite.loadModel(
-      model: "assets/model_unquant.tflite",
-      labels: "assets/labels.txt",
-    );
-  }
-
-  Future<void> _pickImage() async {
-    try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-      setState(() {
-        _image = image;
-        file = File(image!.path);
-      });
-      detectimage(file!);
-    } catch (e) {
-      print('Error picking image: $e');
-    }
-  }
-
-  Future detectimage(File image) async {
-    int startTime = new DateTime.now().millisecondsSinceEpoch;
-    var recognitions = await Tflite.runModelOnImage(
-      path: image.path,
-      numResults: 6,
-      threshold: 0.05,
-      imageMean: 127.5,
-      imageStd: 127.5,
-    );
-    int endTime = new DateTime.now().millisecondsSinceEpoch;
-
-    // Use a StringBuilder
-    var sb = StringBuffer();
-    sb.writeln("==== Recognition Results ====");
-    recognitions?.forEach((res) {
-      sb.writeln(
-          "${(res["confidence"] * 100).toStringAsFixed(0)}% - ${res["label"]}");
-    });
-    sb.writeln("=============================");
-    sb.writeln("Inference Time: ${endTime - startTime}ms");
-
-    // Update the state
+  void onTabTapped(int index) {
     setState(() {
-      recognitionResultsText = sb.toString();
+      _currentIndex = index;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Flutter TFlite'),
+      appBar: AppBar(centerTitle: true,
+        title: Text('Object Detection App'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            if (_image != null)
-              Image.file(
-                File(_image!.path),
-                height: 300,
-                width: 300,
-                fit: BoxFit.cover,
-              )
-            else
-              Text('No image selected'),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _pickImage,
-              child: Text('Pick Image from Gallery'),
-            ),
-            SizedBox(height: 20),
-            Text(recognitionResultsText),
-          ],
-        ),
+      body: _children[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        onTap: onTabTapped,
+        currentIndex: _currentIndex,
+        items: [
+          BottomNavigationBarItem(
+            icon: new Icon(Icons.camera),
+            label: 'Camera',
+          ),
+          BottomNavigationBarItem(
+            icon: new Icon(Icons.image),
+            label: 'Image Picker',
+          ),
+        ],
       ),
     );
   }
