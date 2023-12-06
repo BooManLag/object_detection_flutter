@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:object_detection/views/camera_view.dart';
 import 'package:tflite_v2/tflite_v2.dart';
 
 void main() {
@@ -13,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: ImagePickerDemo(),
+      home: CameraView(),
     );
   }
 }
@@ -86,7 +87,6 @@ class _ImagePickerDemoState extends State<ImagePickerDemo> {
       recognitionResultsText = sb.toString();
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
